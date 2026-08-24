@@ -1,0 +1,10 @@
+{
+  "name": "voxelcraft-web",
+  "version": "1.0.0",
+  "description": "Converted VoxelCraft 3D Voxel Survival & Crafting Game for Web",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {}
+}
