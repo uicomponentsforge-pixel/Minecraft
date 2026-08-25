@@ -1,7 +1,0 @@
-{
-  "name": "VoxelCraft: 3D Survival & Crafting",
-  "description": "Procedurally generated 3D voxel sandbox game featuring survival mode, hunger and health, crafting system, mobs (Creepers, Skeletons, Zombies, Animals), day-night atmosphere, local multiplayer co-op, modding engine, and cross-platform world save sync.",
-  "requestFramePermissions": [],
-  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
-}
-
