@@ -1,0 +1,342 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <title>VoxelCraft: 3D Survival & Crafting</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div id="app">
+    <!-- 1. WORLD SELECT SCREEN -->
+    <div id="world-select-screen" class="screen active">
+      <header class="app-header">
+        <h1>⛏️ VoxelCraft 3D</h1>
+        <p class="subtitle">Procedural Voxel Survival & Crafting Engine</p>
+      </header>
+
+      <div class="content-container">
+        <div class="action-bar">
+          <button id="create-world-btn" class="btn btn-primary" data-testid="create_world_btn">➕ Create New World</button>
+          <button id="import-world-btn" class="btn btn-secondary" data-testid="import_world_btn">📥 Import World JSON</button>
+          <button id="multiplayer-btn" class="btn btn-accent" data-testid="multiplayer_btn">🌐 Multiplayer Lobby</button>
+          <button id="mods-btn" class="btn btn-purple" data-testid="mods_btn">🧩 Mod Manager</button>
+        </div>
+
+        <h2>Select World</h2>
+        <div id="worlds-list" class="worlds-grid">
+          <!-- Dynamically populated -->
+        </div>
+      </div>
+    </div>
+
+    <!-- 2. IN-GAME SCREEN -->
+    <div id="game-screen" class="screen">
+      <!-- 3D Canvas -->
+      <canvas id="gl-canvas"></canvas>
+
+      <!-- Look Control Touch Area (Right Half) -->
+      <div id="look-touch-area"></div>
+
+      <!-- Overlays -->
+      <div id="hurt-overlay"></div>
+      <div id="underwater-overlay"></div>
+      <div id="crosshair"><div></div></div>
+      <div id="break-progress-container"><div id="break-progress-bar"></div></div>
+
+      <!-- Top HUD -->
+      <div id="top-hud">
+        <div class="info-chip">
+          <span id="day-night-icon">☀️</span>
+          <span id="world-info-text">Oak Valley Survival (XYZ: 8, 36, 8)</span>
+        </div>
+        <div class="top-buttons">
+          <button id="camera-toggle-btn" class="icon-btn" data-testid="camera_toggle" title="Toggle Camera">👁️</button>
+          <button id="marketplace-hud-btn" class="icon-btn" data-testid="marketplace_btn" title="Marketplace">🛒</button>
+          <button id="pause-hud-btn" class="icon-btn" data-testid="pause_btn" title="Pause Menu">⏸️</button>
+        </div>
+      </div>
+
+      <!-- Left Virtual Joystick -->
+      <div id="joystick-container">
+        <div id="joystick-knob"></div>
+      </div>
+
+      <!-- Right Touch Action Buttons -->
+      <div id="touch-actions">
+        <div class="touch-row">
+          <button id="mine-btn" class="action-btn red" data-testid="mine_btn">⛏️ MINE</button>
+          <button id="place-btn" class="action-btn green" data-testid="place_btn">🧱 PLACE</button>
+        </div>
+        <div class="touch-row">
+          <button id="sneak-sprint-btn" class="action-btn purple" data-testid="sneak_sprint_btn">🏃 SPRINT</button>
+          <button id="jump-btn" class="action-btn blue" data-testid="jump_btn">⬆️ JUMP</button>
+        </div>
+      </div>
+
+      <!-- Bottom Status & Hotbar HUD -->
+      <div id="bottom-hud">
+        <!-- Hearts & Food -->
+        <div class="status-bars">
+          <div id="hearts-container" class="icon-row"></div>
+          <div id="food-container" class="icon-row"></div>
+        </div>
+        <div id="oxygen-container" class="icon-row"></div>
+
+        <!-- XP Bar -->
+        <div class="xp-bar-wrapper">
+          <div id="xp-bar-fill"></div>
+          <span id="level-badge">1</span>
+        </div>
+
+        <!-- 9-Slot Hotbar & Inventory Button -->
+        <div class="hotbar-wrapper">
+          <div id="hotbar" class="hotbar-slots">
+            <!-- 9 Slots generated -->
+          </div>
+          <button id="inventory-btn" class="hotbar-inv-btn" data-testid="inventory_btn">🎒</button>
+        </div>
+      </div>
+
+      <!-- Game Over / Death Screen -->
+      <div id="death-screen" class="modal-overlay hidden">
+        <div class="modal-card death-card">
+          <h1>You Died!</h1>
+          <p id="final-score">Score: 0</p>
+          <button id="respawn-btn" class="btn btn-danger" data-testid="respawn_btn">Respawn</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- 3. MODALS / DIALOGS -->
+
+    <!-- Create World Modal -->
+    <div id="create-world-modal" class="modal-overlay hidden">
+      <div class="modal-card">
+        <h3>✨ Create New Voxel World</h3>
+        <div class="form-group">
+          <label for="new-world-name">World Name:</label>
+          <input type="text" id="new-world-name" value="New Survival World">
+        </div>
+        <div class="form-group">
+          <label for="new-world-seed">World Seed (Number):</label>
+          <input type="number" id="new-world-seed" value="84920482">
+        </div>
+        <div class="form-group">
+          <label for="new-world-gamemode">Game Mode:</label>
+          <select id="new-world-gamemode">
+            <option value="SURVIVAL">SURVIVAL (Health, Hunger & Mobs)</option>
+            <option value="CREATIVE">CREATIVE (Infinite Blocks & Flight)</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label for="new-world-difficulty">Difficulty:</label>
+          <select id="new-world-difficulty">
+            <option value="PEACEFUL">PEACEFUL</option>
+            <option value="EASY">EASY</option>
+            <option value="NORMAL" selected>NORMAL</option>
+            <option value="HARD">HARD</option>
+          </select>
+        </div>
+        <div class="modal-actions">
+          <button id="confirm-create-world" class="btn btn-primary">Create & Play</button>
+          <button id="cancel-create-world" class="btn btn-secondary">Cancel</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Inventory Modal -->
+    <div id="inventory-modal" class="modal-overlay hidden">
+      <div class="modal-card inventory-card">
+        <div class="modal-header">
+          <h3>🎒 Inventory & Armor</h3>
+          <button class="close-btn" id="close-inventory-btn">✖</button>
+        </div>
+        <div class="inventory-body">
+          <div class="section-title">Armor Slots</div>
+          <div id="armor-slots" class="grid-slots armor-grid"></div>
+
+          <div class="section-title">Main Inventory (27 Slots)</div>
+          <div id="inventory-slots" class="grid-slots inventory-grid"></div>
+
+          <div class="section-title">Hotbar (9 Slots)</div>
+          <div id="inv-hotbar-slots" class="grid-slots hotbar-grid"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Crafting Modal -->
+    <div id="crafting-modal" class="modal-overlay hidden">
+      <div class="modal-card crafting-card">
+        <div class="modal-header">
+          <h3>🔨 Crafting Table (3x3 Grid)</h3>
+          <button class="close-btn" id="close-crafting-btn">✖</button>
+        </div>
+        <div class="crafting-body">
+          <div class="crafting-workbench">
+            <div id="crafting-grid" class="crafting-3x3"></div>
+            <div class="craft-arrow">➔</div>
+            <div id="crafting-result-slot" class="item-slot result-slot"></div>
+          </div>
+          <button id="do-craft-btn" class="btn btn-primary">Craft Item</button>
+
+          <div class="section-title">Available Recipes</div>
+          <div id="recipes-list" class="recipes-container"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Furnace Modal -->
+    <div id="furnace-modal" class="modal-overlay hidden">
+      <div class="modal-card furnace-card">
+        <div class="modal-header">
+          <h3>🔥 Smelting Furnace</h3>
+          <button class="close-btn" id="close-furnace-btn">✖</button>
+        </div>
+        <div class="furnace-body">
+          <div class="furnace-workbench">
+            <div class="furnace-left">
+              <div id="furnace-input-slot" class="item-slot" title="Input Ore / Raw Item"></div>
+              <div id="furnace-flame" class="flame-icon">🔥</div>
+              <div id="furnace-fuel-slot" class="item-slot" title="Fuel (Coal / Wood / Planks)"></div>
+            </div>
+            <div class="furnace-middle">
+              <div id="furnace-progress-arrow" class="progress-arrow">➔</div>
+            </div>
+            <div class="furnace-right">
+              <div id="furnace-output-slot" class="item-slot result-slot" title="Smelted Output"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Pause Menu Modal -->
+    <div id="pause-modal" class="modal-overlay hidden">
+      <div class="modal-card pause-card">
+        <h3>⏸️ Game Paused</h3>
+        <div class="pause-options">
+          <button id="resume-game-btn" class="btn btn-primary">▶️ Resume Game</button>
+          <button id="toggle-sound-btn" class="btn btn-secondary">🔊 Sound: ON</button>
+          <button id="toggle-gamemode-btn" class="btn btn-accent">🎮 Mode: SURVIVAL</button>
+          <button id="save-quit-btn" class="btn btn-danger">💾 Save & Quit to Menu</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Marketplace Modal -->
+    <div id="marketplace-modal" class="modal-overlay hidden">
+      <div class="modal-card marketplace-card">
+        <div class="modal-header">
+          <h3>🏪 Trader Outpost Marketplace</h3>
+          <button class="close-btn" id="close-marketplace-btn">✖</button>
+        </div>
+        <div class="currency-bar">
+          <span>💎 Diamonds: <strong id="mkt-diamonds">0</strong></span>
+          <span>💚 Emeralds: <strong id="mkt-emeralds">0</strong></span>
+          <span>🥇 Gold: <strong id="mkt-gold">0</strong></span>
+          <span>🥈 Iron: <strong id="mkt-iron">0</strong></span>
+        </div>
+        <div id="trade-offers-list" class="offers-list"></div>
+      </div>
+    </div>
+
+    <!-- Mod Manager Modal / Screen -->
+    <div id="mod-manager-modal" class="modal-overlay hidden">
+      <div class="modal-card mod-card">
+        <div class="modal-header">
+          <h3>🧩 Modding Engine & Extensions</h3>
+          <button class="close-btn" id="close-mods-btn">✖</button>
+        </div>
+        <button id="create-custom-block-btn" class="btn btn-accent">+ Register Custom Block Mod</button>
+        <div id="mods-list" class="mods-container"></div>
+      </div>
+    </div>
+
+    <!-- Custom Block Modal -->
+    <div id="custom-block-modal" class="modal-overlay hidden">
+      <div class="modal-card">
+        <h3>🟩 Register Custom Block</h3>
+        <div class="form-group">
+          <label>Block Display Name:</label>
+          <input type="text" id="custom-block-name" value="Ruby Ore">
+        </div>
+        <div class="form-group">
+          <label>Block Color:</label>
+          <input type="color" id="custom-block-color" value="#E53935">
+        </div>
+        <div class="form-group">
+          <label>Hardness (Seconds):</label>
+          <input type="number" id="custom-block-hardness" value="1.5" step="0.1">
+        </div>
+        <div class="form-group">
+          <label>Preferred Tool:</label>
+          <select id="custom-block-tool">
+            <option value="PICKAXE">PICKAXE</option>
+            <option value="AXE">AXE</option>
+            <option value="SHOVEL">SHOVEL</option>
+            <option value="SWORD">SWORD</option>
+          </select>
+        </div>
+        <div class="modal-actions">
+          <button id="confirm-custom-block" class="btn btn-primary">Register Block</button>
+          <button id="cancel-custom-block" class="btn btn-secondary">Cancel</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Multiplayer Lobby Modal / Screen -->
+    <div id="multiplayer-modal" class="modal-overlay hidden">
+      <div class="modal-card mp-card">
+        <div class="modal-header">
+          <h3>🌐 Local Co-op Multiplayer Lobby</h3>
+          <button class="close-btn" id="close-multiplayer-btn">✖</button>
+        </div>
+        <div class="form-group">
+          <label>Player Name:</label>
+          <input type="text" id="mp-player-name" value="Player_Alex">
+        </div>
+        <button id="host-room-btn" class="btn btn-primary">🎮 Create Multiplayer World</button>
+        <h4>Available Server Rooms</h4>
+        <div id="mp-rooms-list" class="rooms-container"></div>
+      </div>
+    </div>
+
+    <!-- Export JSON Dialog -->
+    <div id="export-modal" class="modal-overlay hidden">
+      <div class="modal-card export-card">
+        <h3>📤 Export Save Code (JSON)</h3>
+        <p>Copy this JSON payload to synchronize save data cross-platform:</p>
+        <textarea id="export-json-text" readonly rows="8"></textarea>
+        <div class="modal-actions">
+          <button id="copy-export-json-btn" class="btn btn-primary">📋 Copy Save Code</button>
+          <button id="close-export-btn" class="btn btn-secondary">Close</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Import JSON Dialog -->
+    <div id="import-modal" class="modal-overlay hidden">
+      <div class="modal-card export-card">
+        <h3>📥 Import Save Code (JSON)</h3>
+        <p>Paste a valid VoxelCraft JSON save string below:</p>
+        <textarea id="import-json-text" rows="8" placeholder="Paste JSON save payload here..."></textarea>
+        <div class="modal-actions">
+          <button id="confirm-import-json-btn" class="btn btn-primary">Import & Play</button>
+          <button id="close-import-btn" class="btn btn-secondary">Cancel</button>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Scripts -->
+  <script src="js/simplex-noise.js"></script>
+  <script src="js/sound-engine.js"></script>
+  <script src="js/voxel-models.js"></script>
+  <script src="js/voxel-world.js"></script>
+  <script src="js/voxel-renderer.js"></script>
+  <script src="js/storage.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>
